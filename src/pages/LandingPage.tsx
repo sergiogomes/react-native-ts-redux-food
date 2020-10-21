@@ -2,9 +2,12 @@ import React, { useEffect, useState } from 'react'
 import { View, Text, StyleSheet, Dimensions, Image } from 'react-native';
 import * as Location from 'expo-location';
 
+import { useNavigation } from '../utils';
+
 const screenWidth = Dimensions.get('screen').width;
 
 export const LandingPage = () => {
+  const { navigate } = useNavigation();
   const [errorMsg, SetErrorMsg] = useState('');
   const [address, setAddress] = useState<Location.LocationGeocodedAddress>()
 
@@ -27,12 +30,19 @@ export const LandingPage = () => {
           setAddress(item);
           const currentAddress = `${item.name}, ${item.street}, ${item.postalCode}, ${item.country}`;
           setDisplayAddress(currentAddress);
+
+          if (currentAddress.length > 0) {
+            setTimeout(() => {
+              navigate('homeStack');
+            }, 2000);
+          }
+
           return;
         }
       } else {
         SetErrorMsg('Could not access location.');
       }
-    });
+    })();
   }, []);
 
   const {
