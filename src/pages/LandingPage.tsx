@@ -1,9 +1,40 @@
-import React from "react"
-import { View, Text, StyleSheet, Dimensions, Image } from "react-native";
+import React, { useEffect, useState } from 'react'
+import { View, Text, StyleSheet, Dimensions, Image } from 'react-native';
+import * as Location from 'expo-location';
 
 const screenWidth = Dimensions.get('screen').width;
 
 export const LandingPage = () => {
+  const [errorMsg, SetErrorMsg] = useState('');
+  const [address, setAddress] = useState<Location.LocationGeocodedAddress>()
+
+  const [displayAddress, setDisplayAddress] = useState('');
+
+  useEffect(() => {
+    (async () => {
+      const { status } = await Location.requestPermissionsAsync();
+      if (status !== 'granted') {
+        SetErrorMsg('Permission to access location is not granted.');
+      }
+      const location: Location.LocationObject = await Location.getCurrentPositionAsync({});
+
+      const { coords } = location
+      if (coords) {
+        const { latitude, longitude } = coords;
+        const addressResponse: Location.LocationGeocodedAddress[] = await Location.reverseGeocodeAsync({ latitude, longitude });
+
+        for (const item of addressResponse) {
+          setAddress(item);
+          const currentAddress = `${item.name}, ${item.street}, ${item.postalCode}, ${item.country}`;
+          setDisplayAddress(currentAddress);
+          return;
+        }
+      } else {
+        SetErrorMsg('Could not access location.');
+      }
+    });
+  }, []);
+
   const {
     container,
     navigation,
@@ -12,6 +43,7 @@ export const LandingPage = () => {
     addressContainer,
     addressTitle,
     addressText,
+    addressError,
     footer
   } = styles;
 
@@ -27,13 +59,14 @@ export const LandingPage = () => {
         <View style={addressContainer}>
           <Text style={addressTitle}> Your Delivery Address </Text>
         </View>
-        <Text style={addressText}> Waiting for Current Location </Text>
+        <Text style={addressText}> {displayAddress} </Text>
+        <Text style={addressError}> {errorMsg} </Text>
       </View>
       <View style={footer}>
       </View>
     </View>
   );
-}
+};
 
 const styles = StyleSheet.create({
   container: {
@@ -70,7 +103,12 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: '200',
   },
+  addressError: {
+    color: 'red',
+    fontSize: 18,
+    fontWeight: '400',
+  },
   footer: {
     flex: 1,
-  }
-})
+  },
+});
