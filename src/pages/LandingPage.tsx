@@ -1,17 +1,25 @@
 import React, { useEffect, useState } from 'react'
 import { View, Text, StyleSheet, Dimensions, Image } from 'react-native';
+import { connect } from 'react-redux';
 import * as Location from 'expo-location';
 
 import { useNavigation } from '../utils';
+import { ApplicationState, onUpdateLocation, UserState } from '../redux';
 
 const screenWidth = Dimensions.get('screen').width;
 
-export const LandingPage = () => {
+interface LandingProps {
+  userReducer: UserState,
+  onUpdateLocation: Function,
+};
+
+export const LandingPage: React.FC<LandingProps> = (props) => {
+  const { userReducer, onUpdateLocation } = props;
   const { navigate } = useNavigation();
   const [errorMsg, SetErrorMsg] = useState('');
   const [address, setAddress] = useState<Location.LocationGeocodedAddress>()
 
-  const [displayAddress, setDisplayAddress] = useState('');
+  const [displayAddress, setDisplayAddress] = useState('Waiting for current location.');
 
   useEffect(() => {
     (async () => {
@@ -19,8 +27,9 @@ export const LandingPage = () => {
       if (status !== 'granted') {
         SetErrorMsg('Permission to access location is not granted.');
       }
-      const location: Location.LocationObject = await Location.getCurrentPositionAsync({});
-
+      // const location: Location.LocationObject = await Location.getCurrentPositionAsync({});
+      const location: any = await Location.getCurrentPositionAsync({});
+      
       const { coords } = location
       if (coords) {
         const { latitude, longitude } = coords;
@@ -28,6 +37,7 @@ export const LandingPage = () => {
 
         for (const item of addressResponse) {
           setAddress(item);
+          onUpdateLocation(address);
           const currentAddress = `${item.name}, ${item.street}, ${item.postalCode}, ${item.country}`;
           setDisplayAddress(currentAddress);
 
@@ -122,3 +132,13 @@ const styles = StyleSheet.create({
     flex: 1,
   },
 });
+
+const mapToStateProps = (state: ApplicationState) => ({
+  userReducer: state.userReducer
+});
+
+const LandingScreen = connect(mapToStateProps, { onUpdateLocation })(LandingPage);
+
+export { LandingScreen };
+
+// export default connect(mapToStateProps, { onUpdateLocation })(LandingPage);
