@@ -4,6 +4,9 @@ import { createAppContainer, createSwitchNavigator } from 'react-navigation';
 import { createStackNavigator } from 'react-navigation-stack';
 import { createBottomTabNavigator } from 'react-navigation-tabs';
 
+import { Provider } from 'react-redux';
+import { store } from './src/redux';
+
 import { HomePage } from './src/pages/HomePage';
 import { LandingPage } from './src/pages/LandingPage';
 
@@ -69,7 +72,9 @@ const AppNavigation = createAppContainer(switchNavigator);
 
 export default function App() {
   return (
-    <AppNavigation />
+    <Provider store={store}>
+      <AppNavigation />
+    </Provider>
   );
 }
 
